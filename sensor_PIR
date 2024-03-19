@@ -1,0 +1,42 @@
+// Pin yang digunakan untuk sensor PIR
+const int pirPin = 2; // Misalkan sensor PIR terhubung ke pin 2 Arduino
+
+// Pin yang digunakan untuk speaker/buzzer
+const int buzzerPin = 3; // Misalkan buzzer terhubung ke pin 3 Arduino
+
+// Variabel untuk menyimpan status deteksi gerakan
+int motionDetected = 0;
+
+void setup() {
+  // Set pin buzzer sebagai OUTPUT
+  pinMode(buzzerPin, OUTPUT);
+  
+  // Set pin sensor PIR sebagai INPUT
+  pinMode(pirPin, INPUT);
+  
+  // Mulai serial communication
+  Serial.begin(9600);
+}
+
+void loop() {
+  // Baca status sensor PIR
+  motionDetected = digitalRead(pirPin);
+  
+  if (motionDetected == HIGH) {
+    // Jika gerakan terdeteksi
+    Serial.println("Gerakan Terdeteksi!");
+    
+    // Bunyikan alarm
+    tone(buzzerPin, 1000); // Frekuensi bunyi 1000 Hz
+    delay(1000); // Bunyi selama 1 detik
+    noTone(buzzerPin); // Berhenti bunyi
+  } else {
+    // Jika gerakan tidak terdeteksi
+    Serial.println("Tidak ada gerakan.");
+    
+    // Matikan buzzer
+    noTone(buzzerPin);
+  }
+  
+  delay(500); // Delay antara pembacaan sensor untuk menghindari pembacaan ganda
+}
