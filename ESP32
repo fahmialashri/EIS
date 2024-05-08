@@ -1,0 +1,97 @@
+#include <LiquidCrystal_I2C.h>
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+#define pin_PIR1 13
+#define pin_LDR 32
+#define pin_Buzzer 12
+#define pin_LED 23
+
+int status_PIR1 = LOW;
+int nilai_PIR1 = 0;
+
+const float GAMMA = 0.7;
+const float RL10 = 50;
+
+
+// Fungsi aktifasi komponen Buzzer
+void buzzer_Aktif(int val){
+  if (val == 1) {
+    // Buzzer berbunyi
+    tone(pin_Buzzer, 150); 
+  } else if (val == 0){
+    // Buzzer mati
+    noTone(pin_Buzzer);
+  }   
+}
+
+// Fungsi aktifasi Sensor PIR 1
+void sensor_PIR1(){
+  // Baca data dari sensor PIR 1
+  nilai_PIR1 = digitalRead(pin_PIR1); 
+  // Jika objek terdeteksi 
+  if (nilai_PIR1 == HIGH) {        
+    if (status_PIR1 == LOW) {
+      Serial.println("Sensor PIR 1 Mendeteksi Gerakan");      
+      buzzer_Aktif(1);
+      status_PIR1 = HIGH;
+    }
+  // Jika objek tidak terdeteksi
+  } else { 
+    if (status_PIR1 == HIGH) {
+      Serial.println("Sensor PIR 1 Tidak Mendeteksi Gerakan");
+      buzzer_Aktif(0);      
+      status_PIR1 = LOW;
+    }
+  }
+}
+
+// Fungsi aktifasi Sensor LDR
+void sensor_LDR(){  
+  int analogValue = analogRead(pin_LDR);
+  float voltage = analogValue / 1024. * 5;
+  float resistance = 2000 * voltage / (1 - voltage / 5);
+  float lux = pow(RL10 * 1e3 * pow(10, GAMMA) / resistance, (1 / GAMMA));
+
+  lcd.setCursor(0, 0);
+  lcd.print("Cahaya: ");
+  if (lux > 100) {
+    lcd.print("Terang");
+    digitalWrite(pin_LED, LOW);
+  } 
+  else {
+    lcd.print("Gelap  ");
+    digitalWrite(pin_LED, HIGH);
+  }
+
+  lcd.setCursor(0, 1);
+  lcd.print("Lux: ");
+  lcd.print(lux);
+  lcd.print("          ");
+  
+  delay(100);
+}
+
+void setup() {
+  Serial.begin(115200);
+  
+  // Konfigurasi PIN Output
+  pinMode(pin_Buzzer, OUTPUT);
+  pinMode(pin_LED, OUTPUT);
+
+  // Konfigurasi PIN Input
+  pinMode(pin_PIR1, INPUT);
+  pinMode(pin_LDR, INPUT); 
+
+  // Konfigurasi LCD output
+  lcd.init();
+  lcd.backlight();
+
+
+  // Kondisi awal LED mati
+  digitalWrite(pin_LED, LOW);  
+}
+
+void loop() {
+  sensor_PIR1();
+  sensor_LDR();  
+}
